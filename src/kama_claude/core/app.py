@@ -37,6 +37,7 @@ class CoreApp:
         setup_logging(config)
 
         server = SocketServer(config.host, config.port)
+        # 注册 core.ping 命令处理器
         server.register("core.ping", self._ping_handler)
 
         addr = await server.start()

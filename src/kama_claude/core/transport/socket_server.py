@@ -111,6 +111,7 @@ class SocketServer:
             await self._send(writer, make_error(None, INVALID_REQUEST, "Invalid Request", str(e)))
             return
 
+        # 查找并调用对应method的 handler --method：core.ping -> handler:_ping_handler()
         handler = self._handlers.get(req.method)
         if handler is None:
             await self._send(
@@ -132,10 +133,13 @@ class SocketServer:
             await self._send(writer, make_error(req.id, INTERNAL_ERROR, "Internal error"))
             return
 
+        # 将 handler 返回的结果（或其 model_dump）封装进 JsonRpcSuccess 并发送回客户端
+        # model_dump() -> 序列化为dict
         result_data: Any = result.model_dump() if isinstance(result, BaseModel) else result
         await self._send(writer, JsonRpcSuccess(id=req.id, result=result_data))
 
     # 将 pydantic 消息序列化为 JSON 行并写入流，随后刷新缓冲区
     async def _send(self, writer: asyncio.StreamWriter, msg: BaseModel) -> None:
+        # model_dump_json() -> 序列化为json字符串
         writer.write(msg.model_dump_json().encode() + b"\n")
         await writer.drain()

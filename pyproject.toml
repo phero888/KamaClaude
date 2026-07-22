@@ -31,7 +31,7 @@ dev = [
     "ruff>=0.4",            # 快速 linter + import 排序等
     "mypy>=1.10",           # 静态类型检查
     "pytest>=8.0",          # 单元测试
-    "pytest-asyncio>=0.23", # 异步测试支持
+    "pytest-asyncio>=0.23", # 异步测试支
 ]
 
 # ---- Ruff：统一代码风格 ----
