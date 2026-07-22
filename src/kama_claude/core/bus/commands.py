@@ -4,6 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Discriminator
 
+# ？
 
 class PingCommand(BaseModel):
     type: Literal["core.ping"] = "core.ping"
