@@ -27,6 +27,7 @@ class ExecutionContext:
     def add_tool_result(
         self, tool_use_id: str, content: str, is_error: bool = False
     ) -> None:
+        # block：content子块
         block: dict[str, Any] = {
             "type": "tool_result",
             "tool_use_id": tool_use_id,
@@ -36,12 +37,13 @@ class ExecutionContext:
             block["is_error"] = True
 
         last = self.messages[-1] if self.messages else None
+        # 若最后一条消息是 user 消息且其 content 为 tool_result 列表，则追加到该列表；否则新建 user 消息
         if (
             last is not None
-            and last["role"] == "user"
-            and isinstance(last["content"], list)
-            and last["content"]
-            and all(b.get("type") == "tool_result" for b in last["content"])
+            and last["role"] == "user" #角色为user
+            and isinstance(last["content"], list) # content为列表
+            and last["content"] # content非空
+            and all(b.get("type") == "tool_result" for b in last["content"]) # 列表元素全为tool_result
         ):
             last["content"].append(block)
         else:

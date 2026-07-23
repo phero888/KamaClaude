@@ -45,7 +45,7 @@ class AgentLoop:
                 )
             except asyncio.CancelledError:
                 context.mark_failed("cancelled")
-                raise
+                raise # 取消执行，终止run
             except Exception:
                 context.mark_failed("llm_error")
                 break
@@ -53,12 +53,12 @@ class AgentLoop:
             # [observe] append assistant content blocks to context
             blocks: list[dict[str, object]] = []
             if response.text:
-                blocks.append({"type": "text", "text": response.text})
+                blocks.append({"type": "text", "text": response.text}) # text内容
             for tc in response.tool_calls:
                 blocks.append(
-                    {"type": "tool_use", "id": tc.id, "name": tc.name, "input": tc.input}
+                    {"type": "tool_use", "id": tc.id, "name": tc.name, "input": tc.input} # tool_use内容
                 )
-            context.add_assistant_message(blocks)
+            context.add_assistant_message(blocks) #创建assistant_message，添加到context.messages中
 
             # [act] execute each requested tool; errors become tool results so loop continues
             if response.stop_reason == "tool_use":

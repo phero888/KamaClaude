@@ -4,6 +4,9 @@ from collections.abc import Awaitable, Callable
 
 from pydantic import BaseModel
 
+# 类型别名：type X = Y  Y：Callable[[a,b,...],[x]] -> 接受a,b,...参数，返回x参数的可调用对象
+# Callable：表示可调用对象
+# Awaitable： 当返回值是用await调用的对象，x：Awaitable[...]
 type EventHandler = Callable[[BaseModel], Awaitable[None]]
 
 

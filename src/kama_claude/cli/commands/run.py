@@ -27,6 +27,7 @@ class StdoutPrinter:
         self._inline = False  # True while LLM tokens are mid-line
         self._run_start: float = 0.0
 
+    # 如果正在打印 LLM 输出，则换行
     def _ensure_newline(self) -> None:
         if self._inline:
             print()
