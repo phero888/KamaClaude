@@ -69,13 +69,15 @@ async def invoke_tool(
         return int((time.monotonic() - t0) * 1000)
 
     tool = registry.get(tool_call.name)
+    # 校验工具是否存在
     if tool is None:
         return await _fail(
             bus, run_id, tool_call,
             "runtime_error", f"unknown tool: {tool_call.name}", elapsed(),
         )
 
-    required: list[str] = cast(list[str], tool.input_schema.get("required", []))
+    # 检查必填参数
+    required: list[str] = cast(list[str], tool.input_schema.get("required", [])) # cast(A，B): 检查类型A.type = B.type
     missing = [p for p in required if p not in tool_call.input]
     if missing:
         return await _fail(
@@ -84,7 +86,7 @@ async def invoke_tool(
         )
 
     try:
-        result = await asyncio.wait_for(tool.invoke(dict(tool_call.input)), timeout=timeout)
+        result = await asyncio.wait_for(tool.invoke(dict(tool_call.input)), timeout=timeout) # 超时则抛出 TimeoutError
         ms = elapsed()
         if result.is_error:
             return await _fail(

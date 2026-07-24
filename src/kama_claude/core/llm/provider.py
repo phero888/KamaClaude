@@ -34,7 +34,8 @@ class AnthropicProvider:
             self._client = client
         self._model = model
 
-    # 流式调用 Anthropic API，逐 token 发布事件并返回 LlmResponse
+    # 流式调用 Anthropic API，逐 token 发布事件
+    # 返回封装了文本回复、工具调用和用量统计的 LlmResponse
     async def chat(
         self,
         messages: list[dict[str, object]],
@@ -42,20 +43,24 @@ class AnthropicProvider:
         bus: EventBus,
         run_id: str,
     ) -> LlmResponse:
+        # 发布模型选择事件，通知订阅者此次调用选用了哪个模型
         await bus.publish(
             LlmModelSelectedEvent(run_id=run_id, model=self._model, strategy="static", ts=_now())
         )
 
+        # 构建 system prompt，并在最后一个 text block 上设置 ephemeral 缓存
         system: list[dict[str, object]] = [
             {"type": "text", "text": _SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}},
         ]
 
+        # 复制工具 schema 列表，在最后一个工具 schema 上设置 ephemeral 缓存以优化重复调用
         tools: list[dict[str, object]] = list(tool_schemas)
         if tools:
             last = dict(tools[-1])
             last["cache_control"] = {"type": "ephemeral"}
             tools = tools[:-1] + [last]
 
+        # 组装 API 请求参数：模型名、最大 token 数、system prompt、消息历史
         kwargs: dict[str, object] = {
             "model": self._model,
             "max_tokens": 4096,
@@ -63,20 +68,26 @@ class AnthropicProvider:
             "messages": messages,
         }
         if tools:
+            # 存放流式返回的文本片段
             kwargs["tools"] = tools
 
         text_parts: list[str] = []
 
+        # 使用 Anthropic 流式 API 发送请求
         async with self._client.messages.stream(**kwargs) as stream:
+            # 逐 token 读取 LLM 输出的文本流，发布到事件总线并收集到列表
             async for text in stream.text_stream:
                 await bus.publish(LlmTokenEvent(run_id=run_id, token=text, ts=_now()))
                 text_parts.append(text)
+            # 获取完整的响应消息（含 tool_use block 和 usage）
             final_message = await stream.get_final_message()
 
+        # 从 API 响应中提取 token 用量（含缓存统计）
         usage = final_message.usage
         cache_read: int = getattr(usage, "cache_read_input_tokens", 0) or 0
         cache_create: int = getattr(usage, "cache_creation_input_tokens", 0) or 0
 
+        # 发布 token 用量事件
         await bus.publish(
             LlmUsageEvent(
                 run_id=run_id,
@@ -88,6 +99,7 @@ class AnthropicProvider:
             )
         )
 
+        # 从响应中提取所有 tool_use block，封装为 ToolCallBlock 列表
         tool_calls: list[ToolCallBlock] = []
         for block in final_message.content:
             if block.type == "tool_use":
@@ -95,6 +107,7 @@ class AnthropicProvider:
                     ToolCallBlock(id=block.id, name=block.name, input=dict(block.input))
                 )
 
+        # 组装并返回完整响应：停止原因、工具调用、拼接后的文本、用量统计
         return LlmResponse(
             stop_reason=final_message.stop_reason or "end_turn",
             tool_calls=tool_calls,
