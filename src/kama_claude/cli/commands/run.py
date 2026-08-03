@@ -72,7 +72,7 @@ async def _run_async(goal: str, config: KamaConfig) -> int:
         return 1
 
     printer = StdoutPrinter()
-    finished = asyncio.Event()
+    finished = asyncio.Event() # set() -> true; wait() -> false, 等待 set()
     exit_code = 0
 
     async def on_event(event: dict[str, Any]) -> None:

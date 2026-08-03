@@ -81,10 +81,11 @@ class SocketClient:
     # 解析单行消息并路由到 pending future（RPC 响应）或 event handler（服务器推送）
     async def _dispatch(self, line: bytes) -> None:
         try:
-            msg: dict[str, Any] = json.loads(line)
+            msg: dict[str, Any] = json.loads(line) # 解析为json
         except json.JSONDecodeError:
             return
 
+        # RPC响应
         if "jsonrpc" in msg:
             req_id: str | None = msg.get("id")
             if req_id and req_id in self._pending:
@@ -97,6 +98,7 @@ class SocketClient:
                         )
                     else:
                         fut.set_result(msg.get("result") or {})
+        # 服务器推送事件
         elif msg.get("kind") == "event":
             event_data: dict[str, Any] = msg.get("event", {})
             for handler in self._event_handlers:
