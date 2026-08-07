@@ -15,7 +15,7 @@ from kama_claude.core.bus.commands import (
     AgentRunResult,
     EventSubscribeCommand,
     EventSubscribeResult,
-    PongResult,
+    PongResult, PingCommand,
 )
 from kama_claude.core.bus.envelope import EventPushEnvelope
 from kama_claude.core.config import KamaConfig, get_config
@@ -41,6 +41,8 @@ class CoreApp:
     # 处理 core.ping 请求，返回服务版本、运行时长和接收时间
     async def _ping_handler(self, params: dict[str, Any]) -> PongResult:
         client = params.get("client", "unknown")
+        # cmd = PingCommand.model_validate(params)
+        # client = cmd.client if cmd.client != "unknown" else client
         logger.debug("ping from %s", client)
         return PongResult(
             server_version=kama_claude.__version__,

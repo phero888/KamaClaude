@@ -133,7 +133,7 @@ class SocketServer:
                 make_error(req.id, METHOD_NOT_FOUND, f"Method not found: {req.method}"),
             )
             return
-
+        # 为保持handler参数一致性（其他handler不需要writer），writer使用ContextVar传递
         _writer_var.set(writer)
         try:
             result = await handler(req.params)
