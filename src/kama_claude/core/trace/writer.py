@@ -20,6 +20,7 @@ class TraceWriter:
 
     # 等待队列清空后取消 drain task
     async def stop(self) -> None:
+        # 确保队列最后记录能落盘
         await self._queue.join()
         if self._task is not None:
             self._task.cancel()
@@ -41,4 +42,5 @@ class TraceWriter:
                     f.write(record.model_dump_json() + "\n")
                     f.flush()
                 finally:
+                    # 即使write()异常join()也不会永久阻塞
                     self._queue.task_done()
