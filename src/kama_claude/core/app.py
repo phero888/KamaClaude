@@ -81,6 +81,8 @@ class CoreApp:
         runner = AgentRunner(self._config, bus=self._bus, trace=self._trace)
         run_task = asyncio.create_task(runner.run(cmd.goal, run_id=run_id))
         self._running_runs.add(run_task)
+        # add_done_callback():当run_task结束后，自动调用参数函数
+        # discard(): 从集合中移除元素
         run_task.add_done_callback(self._running_runs.discard)
         return AgentRunResult(run_id=run_id)
 

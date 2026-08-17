@@ -63,10 +63,12 @@ class AgentRunner:
     # 构建工具注册表，注入 TaskManager（任务工具共享同一实例）
     def _build_registry(self, task_manager: TaskManager) -> ToolRegistry:
         registry = ToolRegistry()
+        # 执行工具
         registry.register(ReadFileTool())
         registry.register(BashTool())
         registry.register(WriteFileTool())
         registry.register(ListDirTool())
+        # 任务工具
         registry.register(TaskCreateTool(task_manager))
         registry.register(TaskUpdateTool(task_manager))
         registry.register(TaskListTool(task_manager))
@@ -85,6 +87,7 @@ class AgentRunner:
         run_path = self._runs_dir / run_id
         run_path.mkdir(parents=True, exist_ok=True)
 
+        # 初始化任务管理器：持久化任务到json文件
         task_manager = TaskManager(run_path / ".tasks")
 
         bus = self._bus if self._bus is not None else EventBus()
