@@ -99,10 +99,16 @@ class AgentRunner:
         store: SessionStore | None = None,
     ) -> RunOutcome:
         run_id = run_id or new_run_id()
+        # chat部分
         if session is not None and store is not None:
+            # s3->s4: run目录转移至session下
             run_path = store.runs_dir(session.id) / run_id
+            # 两层记忆：
+            # 1. history：纯对话历史 ->作为messages前缀；
+            # 2. notes：agent 主动保存的长期事实和决策 ->注入system prompt
             history = store.read_messages(session.id)
             notes = store.read_notes(session.id)
+        # run部分
         else:
             run_path = self._runs_dir / run_id
             history = [{"role": "user", "content": goal}]
@@ -152,6 +158,7 @@ class AgentRunner:
                 cancelled = True
                 if not context.is_done():
                     context.mark_failed("cancelled")
+            # 兜底：LLM出错run能正常结束-> session状态维护，状态机不卡死
             except Exception:
                 if not context.is_done():
                     context.mark_failed("llm_error")
@@ -165,7 +172,7 @@ class AgentRunner:
                     ts=_now(),
                 )
             )
-
+        # 写入新生成的message -> session
         if session is not None and store is not None:
             store.append_messages(session.id, context.messages[prefill_len:], run_id=run_id)
 

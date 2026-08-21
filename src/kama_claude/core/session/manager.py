@@ -79,6 +79,7 @@ class SessionManager:
             if session.status == "waiting_for_input":
                 await self._bus.publish(SessionResumedEvent(session_id=sid, ts=_now()))
 
+            # 写进 thread.jsonl，再启动 AgentRunner: runner中读取thread.jsonl获取history
             self._store.append_message(sid, "user", content)
             await self._bus.publish(
                 SessionMessageReceivedEvent(session_id=sid, content=content, ts=_now())
@@ -92,6 +93,8 @@ class SessionManager:
             session.updated_at = _now()
             self._store.write_meta(session)
 
+            # 执行到这里才真正创建AgentRunner实例
+            # 让每次send_message使用不同的runner：不同的run_id...
             runner = self._runner_factory()
             await runner.run_and_capture(
                 content,

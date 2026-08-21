@@ -193,6 +193,7 @@ class CoreApp:
         store = SessionStore(sessions_root)
         self._sessions = SessionManager(
             store,
+            # runner_factory：如何创建AgentRunner，现在并没有真实创建AgentRunner  -> manager.py:95
             runner_factory=lambda: AgentRunner(self._config, bus=self._bus, trace=self._trace),  # type: ignore[arg-type]
             bus=self._bus,
         )

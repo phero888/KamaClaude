@@ -39,6 +39,7 @@ class ChatPrinter:
 # 在线程池中读取 stdin，避免阻塞 socket event loop
 async def _readline(prompt: str) -> str:
     loop = asyncio.get_running_loop()
+    # input() 会阻塞整个 event loop，将任务交给线程，协程等待，loop跑别的协程
     return await loop.run_in_executor(None, input, prompt)
 
 
