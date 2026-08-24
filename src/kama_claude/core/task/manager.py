@@ -10,7 +10,8 @@ from kama_claude.core.task.model import Task, TaskStatus
 def _now() -> str:
     return datetime.now(UTC).isoformat()
 
-
+# 任务文件不使用数据库存储: 任务数量通常是个位数到十几个，文件 I/O 的开销完全可以忽略。
+# 用文件的好处是：任务的完整历史可以直接用 ls 和 cat 查看，不需要任何工具，调试非常方便。
 class TaskManager:
     # 初始化：确保目录存在，扫描现有文件确定下一个 ID
     def __init__(self, tasks_dir: Path) -> None:
@@ -112,6 +113,7 @@ class TaskManager:
             if completed_id in blocked:
                 data["blocked_by"] = [x for x in blocked if x != completed_id]
                 data["updated_at"] = _now()
+                # 清空源文件内容,写入新内容
                 f.write_text(json.dumps(data, indent=2, ensure_ascii=False))
 
     # 格式化任务列表摘要，供 task_list 工具返回给 Agent

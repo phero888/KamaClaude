@@ -38,10 +38,11 @@ class BashTool(BaseTool):
         try:
             proc = await asyncio.create_subprocess_shell(
                 command,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.STDOUT,
+                stdout=asyncio.subprocess.PIPE, # 不打印到终端,输出捕获
+                stderr=asyncio.subprocess.STDOUT, # 将错误输出合并到普通输出
             )
             try:
+                # 等待proc结束,收集输出
                 stdout_bytes, _ = await asyncio.wait_for(
                     proc.communicate(), timeout=timeout
                 )
@@ -56,8 +57,8 @@ class BashTool(BaseTool):
         except Exception as exc:
             return ToolResult(content=str(exc), is_error=True, error_type="runtime_error")
 
-        output = stdout_bytes.decode("utf-8", errors="replace")
-        truncated = len(stdout_bytes) > _MAX_OUTPUT_BYTES
+        output = stdout_bytes.decode("utf-8", errors="replace") # 解码输出: bytes -> utf-8
+        truncated = len(stdout_bytes) > _MAX_OUTPUT_BYTES # 限制输出长度
         if truncated:
             output = output[:_MAX_OUTPUT_BYTES] + "\n[truncated]"
 

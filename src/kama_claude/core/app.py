@@ -46,7 +46,7 @@ class CoreApp:
         self._broadcaster: IpcEventBroadcaster | None = None
         self._trace: TraceWriter | None = None
         self._config: KamaConfig | None = None
-        self._running_runs: set[asyncio.Task[None]] = set()
+        self._running_runs: set[asyncio.Task[None]] = set() # 支持协程并发，多agent.run
 
     # 处理 core.ping 请求，返回服务版本、运行时长和接收时间
     async def _ping_handler(self, params: dict[str, Any]) -> PongResult:
