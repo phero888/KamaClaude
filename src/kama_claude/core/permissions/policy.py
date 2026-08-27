@@ -22,11 +22,13 @@ OUTSIDE_CWD_HEURISTICS: list[str] = [
     r"(^|\s|;|&&|\|\|)cd(\s|$)",  # explicit cd
 ]
 
+# 预编译正则表达式
 _OUTSIDE_CWD_RE: list[re.Pattern[str]] = [re.compile(p) for p in OUTSIDE_CWD_HEURISTICS]
 
 
 # 判断 bash 命令是否命中 outside-cwd 启发式规则
 def matches_outside_cwd(command: str) -> bool:
+    # 预编译后pat是re.Pattern对象，pat.search == re.search
     return any(pat.search(command) for pat in _OUTSIDE_CWD_RE)
 
 

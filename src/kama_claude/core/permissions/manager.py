@@ -76,6 +76,7 @@ class PermissionManager:
         # Tier 1: deny_patterns（bash only，不可被缓存绕过）
         if command and policy:
             for pat in policy.deny_patterns:
+                # 正则匹配：command含有pat子串？
                 if re.search(pat, command):
                     logger.debug("permission: deny_pattern hit tool=%s", tool_name)
                     return False, "auto_deny"
@@ -84,14 +85,15 @@ class PermissionManager:
         outside_cwd = bool(command and matches_outside_cwd(command))
 
         if not outside_cwd:
-            # Tier 3: session always 缓存
+            # Tier 3: session always 缓存（内存）
             session_key = (session_id, tool_name)
             if session_key in self._session_always:
                 cached = self._session_always[session_key]
                 logger.debug("permission: session cache hit tool=%s decision=%s", tool_name, cached)
+                # cache与字符串比较返回True/False
                 return cached == "allow", f"auto_{cached}"
 
-            # Tier 4: persistent always（跨 session）
+            # Tier 4: persistent always（跨 session）：按工具名全局生效，存到 ~/.kama/policy.toml 文件
             if tool_name in self._persistent_always:
                 cached = self._persistent_always[tool_name]
                 logger.debug("permission: persistent cache hit tool=%s decision=%s", tool_name, cached)
@@ -120,6 +122,7 @@ class PermissionManager:
             tool_name=tool_name,
         )
 
+        # 执行传入的函数方法: 发布PermissionRequestedEvent
         await event_emitter(
             {
                 "type": "permission.requested",
@@ -133,6 +136,7 @@ class PermissionManager:
         )
 
         try:
+            # 挂起，等待future返回
             if self._timeout_s > 0:
                 raw = await asyncio.wait_for(future, timeout=self._timeout_s)
             else:
