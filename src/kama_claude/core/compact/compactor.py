@@ -116,7 +116,7 @@ class Compactor:
 
         history_text = _messages_to_text(messages)
         prompt = _COMPACT_PROMPT
-        if focus.strip():
+        if focus.strip(): # focus 不为空
             prompt += f"\n\nIMPORTANT: Pay special attention to: {focus.strip()}"
 
         compress_request: list[dict[str, object]] = [
@@ -124,7 +124,7 @@ class Compactor:
         ]
 
         try:
-            silent_bus = _Bus()
+            silent_bus = _Bus() # 静默总线
             response = await provider.chat(
                 messages=compress_request,
                 tool_schemas=[],
@@ -164,10 +164,12 @@ class Compactor:
 def _messages_to_text(messages: list[dict[str, Any]]) -> str:
     parts: list[str] = []
     for msg in messages:
-        role = msg.get("role", "unknown").upper()
+        role = msg.get("role", "unknown").upper() # upper(): 转为大写，lower(): 转为小写
         content = msg.get("content", "")
+        # 处理非工具消息
         if isinstance(content, str):
             parts.append(f"[{role}]\n{content}")
+        # 处理工具消息
         elif isinstance(content, list):
             blocks: list[str] = []
             for block in content:

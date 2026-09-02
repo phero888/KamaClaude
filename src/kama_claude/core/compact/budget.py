@@ -35,3 +35,4 @@ def truncate_tool_results(
             new_blocks.append(block)
         result.append({**msg, "content": new_blocks})
     return result
+

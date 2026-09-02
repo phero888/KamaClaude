@@ -111,19 +111,20 @@ class SessionStore:
     def _trim_orphan_tool_use(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
         pending: set[str] = set()
         last_balanced = 0
-        for idx, msg in enumerate(messages, start=1):
+        for idx, msg in enumerate(messages, start=1): # 必须遍历所有message：不到最后不会知道是否真的有、没有未配对的tool_use
             content = msg.get("content")
             if isinstance(content, list):
                 if msg.get("role") == "assistant":
                     for block in content:
                         if block.get("type") == "tool_use":
-                            pending.add(str(block.get("id", "")))
+                            pending.add(str(block.get("id", ""))) # 添加id
                 elif msg.get("role") == "user":
                     for block in content:
                         if block.get("type") == "tool_result":
-                            pending.discard(str(block.get("tool_use_id", "")))
+                            pending.discard(str(block.get("tool_use_id", ""))) # 移除id
             if not pending:
                 last_balanced = idx
+            # else 必须把消息读完才能确定pending中的tool_use真的没有tool_result配对
         if pending:
             logger.warning("trim orphan tool_use blocks from thread")
             return messages[:last_balanced]
