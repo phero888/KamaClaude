@@ -115,7 +115,7 @@ class AgentRunner:
             notes = ""
         run_path.mkdir(parents=True, exist_ok=True)
 
-        global_ctx = load_context_file(Path("~/.kama/context.md").expanduser())
+        global_ctx = load_context_file(Path("~/.kama/context.md").expanduser()) # expanduser(): 展开用户目录'~'功能
         project_ctx = load_context_file(Path(".kama/context.md"))
 
         task_manager = TaskManager(run_path / ".tasks")
