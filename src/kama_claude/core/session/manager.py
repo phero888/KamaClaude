@@ -103,7 +103,7 @@ class SessionManager:
             system_prompt_override: str | None = None
             tool_whitelist: list[str] | None = None
             if content.startswith("/"):
-                parts = content[1:].split(None, 1)
+                parts = content[1:].split(None, 1) # 第一个空格分割为两部分：/skill_name 其余参数
                 skill_name = parts[0]
                 arguments = parts[1] if len(parts) > 1 else ""
                 skill = self._skill_loader.resolve(skill_name)

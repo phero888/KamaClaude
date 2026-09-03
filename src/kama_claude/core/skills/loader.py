@@ -19,7 +19,7 @@ _FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL)
 # 解析 Markdown skill 文件，提取 frontmatter 和正文 system prompt
 def _parse_skill_file(path: Path) -> Skill:
     text = path.read_text(encoding="utf-8")
-    name = path.stem
+    name = path.stem # 文件名（不含扩展名）作为名称
     description = ""
     allowed_tools: list[str] = []
     body = text
@@ -128,6 +128,6 @@ class SkillLoader:
                         pass
         return list(seen.values())
 
-    # 将 $ARGUMENTS 替换为用户传入的参数字符串
+    # 将 SKILL.md中的 $ARGUMENTS 替换为用户传入的参数字符串
     def render_prompt(self, skill: Skill, arguments: str) -> str:
         return skill.system_prompt_template.replace("$ARGUMENTS", arguments)

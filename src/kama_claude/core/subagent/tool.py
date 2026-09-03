@@ -133,6 +133,7 @@ class SpawnAgentTool(BaseTool):
         async def _bridge(event: BaseModel) -> None:
             await self._parent_bus.publish(event)
 
+        # _bridge()订阅child_bus的事件，当child_bus发布事件时，_bridge()就会被调用，_bridge()将事件再_parent_bus发布
         child_bus.subscribe(_bridge)
 
         child_registry = self._build_child_registry(child_bus, child_run_id, profile)
@@ -144,6 +145,7 @@ class SpawnAgentTool(BaseTool):
             session_id=self._session_id,
         )
 
+        #  子 agent 通知父 agent; 子agent自身无需发布该消息，所以是_parent_bus.publish(),而不是child_bus.publish()
         await self._parent_bus.publish(
             SubagentStartedEvent(
                 run_id=child_run_id,

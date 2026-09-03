@@ -198,6 +198,7 @@ class AgentRunner:
                         include_payload=self._config.trace.include_llm_payload,
                     )
                 session_id_str = session.id if session is not None else ""
+                # 子agent工作目录
                 child_runs_dir = (
                     store.runs_dir(session.id)
                     if session is not None and store is not None

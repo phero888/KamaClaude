@@ -30,7 +30,7 @@ class ExecutionContext:
 
     # 返回当前 run 的 system prompt；有 override 时跳过 base，直接注入记忆层
     def system_prompt(self, base: str) -> str:
-        parts = [self.system_prompt_override if self.system_prompt_override else base]
+        parts = [self.system_prompt_override if self.system_prompt_override else base] #skill 或 base
         if self.global_context.strip():
             parts.append("\n\n## Global Context\n" + self.global_context.strip())
         if self.project_context.strip():
